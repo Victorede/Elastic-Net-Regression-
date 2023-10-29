@@ -15,12 +15,22 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Get latest release tag
+        id: latesttag
+        run: |
+          LATEST_TAG=$(curl -sL https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+      - name: Increment version
+        id: incversion
+        run: |
+          LATEST_TAG=${LATEST_TAG#v}
+          NEW_TAG="v$(echo $LATEST_TAG | awk -F. '{$NF = $NF + 1;} 1' OFS=.)"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
         with:
-          tag_name: ${{ github.run_number }}
-          release_name: Release ${{ github.run_number }}
-          
+          tag_name: ${{ env.NEW_TAG }}
+          release_name: Release ${{ env.NEW_TAG }}
