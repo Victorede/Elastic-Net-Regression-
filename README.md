@@ -1,2 +1,2 @@
 # Elastic-Net-Regression-
-Supervised Machine Learning
+Supervised Machine Learning Project
