@@ -22,17 +22,18 @@ jobs:
           if [[ "$LATEST_TAG" == "null" ]]; then
             echo "NEW_TAG=v1.0.0" >> $GITHUB_ENV
           else
-            echo "LATEST_TAG=${LATEST_TAG#v}" >> $GITHUB_ENV  # Removing 'v' prefix for parsing
+            LATEST_TAG_CLEANED=${LATEST_TAG#v}  # Removing 'v' prefix for parsing
+            echo "LATEST_TAG_CLEANED=$LATEST_TAG_CLEANED" >> $GITHUB_ENV
           fi
       - name: Increment version (if needed)
         id: incversion
         run: |
-          if [[ -z "$LATEST_TAG" ]]; then
+          if [[ -z "$LATEST_TAG_CLEANED" ]]; then
             exit 0
           fi
-          MAJOR_VERSION=$(echo $LATEST_TAG | cut -d. -f1)
-          MINOR_VERSION=$(echo $LATEST_TAG | cut -d. -f2)
-          PATCH_VERSION=$(echo $LATEST_TAG | cut -d. -f3)
+          MAJOR_VERSION=$(echo $LATEST_TAG_CLEANED | cut -d. -f1)
+          MINOR_VERSION=$(echo $LATEST_TAG_CLEANED | cut -d. -f2)
+          PATCH_VERSION=$(echo $LATEST_TAG_CLEANED | cut -d. -f3)
           PATCH_VERSION=$((PATCH_VERSION + 1))
           NEW_TAG="v${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
           echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
