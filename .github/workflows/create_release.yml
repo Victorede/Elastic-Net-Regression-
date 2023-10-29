@@ -18,19 +18,29 @@ jobs:
       - name: Get latest release tag
         id: latesttag
         run: |
-          LATEST_TAG=$(curl -sL https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
-          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
-      - name: Increment version
+          LATEST_TAG=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
+          if [[ "$LATEST_TAG" == "null" ]]; then
+            echo "NEW_TAG=v1.0.0" >> $GITHUB_ENV
+          else
+            echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+          fi
+      - name: Increment version (if needed)
         id: incversion
         run: |
-          LATEST_TAG=${LATEST_TAG#v}
-          NEW_TAG="v$(echo $LATEST_TAG | awk -F. '{$NF = $NF + 1;} 1' OFS=.)"
-          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
+          if [[ -z "$LATEST_TAG" ]]; then
+            exit 0
+          fi
+          MAJOR_VERSION=$(echo $LATEST_TAG | cut -d. -f1)
+          MINOR_VERSION=$(echo $LATEST_TAG | cut -d. -f2)
+          PATCH_VERSION=$(echo $LATEST_TAG | cut -d. -f3)
+          PATCH_VERSION=$((PATCH_VERSION + 1))
+          NEW_TAG="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
+          echo "NEW_TAG=v$NEW_TAG" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by Actions, you do not need to create your own token
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ env.NEW_TAG }}
           release_name: Release ${{ env.NEW_TAG }}
