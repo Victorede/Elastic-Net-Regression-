@@ -19,13 +19,14 @@ jobs:
         id: latesttag
         run: |
           LATEST_TAG=$(curl -sL -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" https://api.github.com/repos/${{ github.repository }}/releases/latest | jq -r .tag_name)
-          if [[ "$LATEST_TAG" == "null" ]]; then
+          # Check if the tag matches the vX.Y.Z format
+          if [[ ! "$LATEST_TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "NEW_TAG=v1.0.0" >> $GITHUB_ENV
-          else
-            LATEST_TAG_CLEANED=${LATEST_TAG#v}  # Removing 'v' prefix for parsing
-            echo "LATEST_TAG_CLEANED=$LATEST_TAG_CLEANED" >> $GITHUB_ENV
+            exit 0
           fi
-      - name: Increment version (if needed)
+          LATEST_TAG_CLEANED=${LATEST_TAG#v}
+          echo "LATEST_TAG_CLEANED=$LATEST_TAG_CLEANED" >> $GITHUB_ENV
+      - name: Increment version
         id: incversion
         run: |
           if [[ -z "$LATEST_TAG_CLEANED" ]]; then
