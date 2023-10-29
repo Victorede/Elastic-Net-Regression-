@@ -22,7 +22,7 @@ jobs:
           if [[ "$LATEST_TAG" == "null" ]]; then
             echo "NEW_TAG=v1.0.0" >> $GITHUB_ENV
           else
-            echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_ENV
+            echo "LATEST_TAG=${LATEST_TAG#v}" >> $GITHUB_ENV  # Removing 'v' prefix for parsing
           fi
       - name: Increment version (if needed)
         id: incversion
@@ -34,8 +34,8 @@ jobs:
           MINOR_VERSION=$(echo $LATEST_TAG | cut -d. -f2)
           PATCH_VERSION=$(echo $LATEST_TAG | cut -d. -f3)
           PATCH_VERSION=$((PATCH_VERSION + 1))
-          NEW_TAG="${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
-          echo "NEW_TAG=v$NEW_TAG" >> $GITHUB_ENV
+          NEW_TAG="v${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}"
+          echo "NEW_TAG=$NEW_TAG" >> $GITHUB_ENV
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
